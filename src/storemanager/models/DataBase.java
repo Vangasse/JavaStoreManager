@@ -45,7 +45,8 @@ public class DataBase {
             while(result.next()){
                 String name = result.getString("ArticleName");
                 float price = result.getFloat("Price");
-                articles.add(new Article(name,price));
+                int quantity = result.getInt("Quantity");
+                articles.add(new Article(name,price,quantity));
             }
             ObservableList<Article> result = FXCollections.observableArrayList(articles);
             return result;

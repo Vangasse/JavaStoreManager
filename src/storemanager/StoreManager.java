@@ -83,7 +83,7 @@ public class StoreManager extends Application {
         admin.addButton.setOnAction(new EventHandler<ActionEvent>(){
             @Override 
             public void handle(ActionEvent e){
-                Article article =new Article(admin.addArticle.getText(),Float.valueOf(admin.addPrice.getText()));
+                Article article =new Article(admin.addArticle.getText(),Float.valueOf(admin.addPrice.getText()),Integer.parseInt(admin.addQuantity.getText()));
                 articles.add(article);
                 dataContainer.add(article);
                 db.setArticle(article);

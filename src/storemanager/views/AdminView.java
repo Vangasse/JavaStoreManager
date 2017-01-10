@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.FloatStringConverter;
+import javafx.util.converter.IntegerStringConverter;
 import storemanager.models.Article;
 
 /**
@@ -39,12 +40,12 @@ public class AdminView {
     public Scene scene;
     public TableView table;
     public Button addButton,deleteBtn;
-    public TextField addArticle,addPrice,searchArticles;
+    public TextField addArticle,addPrice,searchArticles,addQuantity;
     public HBox hb,wraper;
     public VBox vb, sideB;
     public StackPane  lagerStackPt1,lagerStackPt2;
     public SplitPane  sp;
-    public TableColumn priceClmn ,nameClmn ;
+    public TableColumn priceClmn ,nameClmn,quantityClmn ;
     
     
     
@@ -67,17 +68,22 @@ public class AdminView {
         addButton.setDisable(true);
         // creating the columns and data that they accept
         nameClmn = new TableColumn("Artical Name");
-        nameClmn.setMinWidth(198);
+        nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
         nameClmn.setCellValueFactory(
                     new PropertyValueFactory<Article, String>("Name"));
         nameClmn.setCellFactory(TextFieldTableCell.forTableColumn());
       
         priceClmn = new TableColumn("Artical Price");
-        priceClmn.setMinWidth(198);
+        priceClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
         priceClmn.setCellValueFactory(
                     new PropertyValueFactory<Article, Float>("Price"));
         priceClmn.setCellFactory(TextFieldTableCell.forTableColumn(new FloatStringConverter()));
-        
+        //column for quantity in admin view
+        quantityClmn = new TableColumn("Artical Quantity");
+        quantityClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        quantityClmn.setCellValueFactory(
+                    new PropertyValueFactory<Article, Integer>("Quantity"));
+        quantityClmn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         //creating text fields and their functionalities denying to enter empty values
         addArticle = new TextField();
         addArticle.setPromptText("Add Article");
@@ -86,6 +92,10 @@ public class AdminView {
         addPrice = new TextField();
         addPrice.setPromptText("Add Price");
         addPrice.setPrefWidth(170);
+        
+        addQuantity = new TextField();
+        addQuantity.setPromptText("Add Price");
+        addQuantity.setPrefWidth(170);
         //functionalty to enable text field when they are filled out 
         addPrice.textProperty().addListener(new ChangeListener<String>(){
             @Override
@@ -94,20 +104,30 @@ public class AdminView {
                     addPrice.setText(newValue.replaceAll("[^\\d]", ""));
                     System.out.println(addPrice.getText().toCharArray().length);   
                 }
-                addButton.setDisable(!((addPrice.getText().toCharArray().length > 0) && (addArticle.getText().toCharArray().length > 0)) );
+                addButton.setDisable(!((addPrice.getText().toCharArray().length > 0) && (addArticle.getText().toCharArray().length > 0)&& (addQuantity.getText().toCharArray().length > 0)) );
+            }
+        });
+        addQuantity.textProperty().addListener(new ChangeListener<String>(){
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    addPrice.setText(newValue.replaceAll("[^\\d]", ""));
+                    System.out.println(addPrice.getText().toCharArray().length);   
+                }
+                addButton.setDisable(!((addPrice.getText().toCharArray().length > 0) && (addArticle.getText().toCharArray().length > 0)&& (addQuantity.getText().toCharArray().length > 0)) );
             }
         });
         addArticle.textProperty().addListener((observable,oldValue,newValue)->{
-            addButton.setDisable(!((addPrice.getText().toCharArray().length > 0) && (addArticle.getText().toCharArray().length > 0)) );
+            addButton.setDisable(!((addPrice.getText().toCharArray().length > 0) && (addArticle.getText().toCharArray().length > 0) && (addQuantity.getText().toCharArray().length > 0)) );
         });
         
 
-        table.getColumns().addAll(nameClmn, priceClmn);
+        table.getColumns().addAll(nameClmn, priceClmn,quantityClmn);
     
         hb = new HBox();
         hb.setSpacing(10);
         hb.setAlignment(Pos.BOTTOM_LEFT);
-        hb.getChildren().addAll(addArticle, addPrice, addButton);
+        hb.getChildren().addAll(addArticle, addPrice, addButton,addQuantity);
 
         //creating to Vertical Boxes to separate content and the 
         //left

@@ -5,9 +5,12 @@
  */
 package storemanager.views;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -24,6 +27,8 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
+import javafx.util.converter.DateStringConverter;
 import javafx.util.converter.FloatStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import storemanager.models.Article;
@@ -56,28 +61,28 @@ public class RecipeView {
         
         tableRecipeItems = new TableView();
         tableRecipeItems.setEditable(false);
-        // Creating columns for Recipe Table
+//         Creating columns for Recipe Table
         dateRecipe = new TableColumn("Recipe Made On");
         dateRecipe.prefWidthProperty().bind(tableRecipes.widthProperty().multiply(0.4));
         dateRecipe.setCellValueFactory(
-                    new PropertyValueFactory<Article, String>("Date"));
+                    new PropertyValueFactory<Recipe, String>("date"));
         dateRecipe.setCellFactory(TextFieldTableCell.forTableColumn());
         
         RecipeID = new TableColumn("Recipe ID");
         RecipeID.prefWidthProperty().bind(tableRecipes.widthProperty().multiply(0.3));
         RecipeID.setCellValueFactory(
-                    new PropertyValueFactory<Article, String>("ID"));
+                    new PropertyValueFactory<Recipe, String>("ID"));
         RecipeID.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         
         numOfItems = new TableColumn("Number of Items");
         numOfItems.prefWidthProperty().bind(tableRecipes.widthProperty().multiply(0.3));
-        numOfItems.setCellValueFactory(new PropertyValueFactory<Item, String>("numberOfItems"));
+        numOfItems.setCellValueFactory(new PropertyValueFactory<Recipe, String>("numberOfItems"));
         numOfItems.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         
         nameItems = new TableColumn("Name");
         nameItems.prefWidthProperty().bind(tableRecipeItems.widthProperty().multiply(0.3));
         nameItems.setCellValueFactory(
-                    new PropertyValueFactory<Item, String>("Name"));
+                    new PropertyValueFactory<Item, String>("Article"));
         nameItems.setCellFactory(TextFieldTableCell.forTableColumn());
         
         priceItems = new TableColumn("Price");
@@ -151,16 +156,20 @@ public class RecipeView {
         
         sp = new SplitPane();
         sp.getItems().addAll(stackP1,stackP2);
-        sp.setDividerPositions(0.1f, 0.6f, 0.9f);   
+        sp.setDividerPositions(0.1f, 0.6f, 0.9f);
+        
+        System.out.println("This is done ");
     }
     public SplitPane getSplitP(){
         return this.sp;
     }
     public void fillTableRecipes(ObservableList<Recipe> recipes){
-        tableRecipes.setItems(recipes);
+        System.out.println("Comes into this method ");
+        this.tableRecipes.setItems(recipes);
+        
     }
     public void fillTableItems(ObservableList<Item> items){
-        tableRecipeItems.setItems(items);
+        this.tableRecipeItems.setItems(items);
     }
     public void fillMonthsArray(){
         months.add("January");

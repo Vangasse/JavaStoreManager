@@ -68,7 +68,7 @@ public class AdminView {
         addButton.setDisable(true);
         // creating the columns and data that they accept
         nameClmn = new TableColumn("Artical Name");
-        nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
         nameClmn.setCellValueFactory(
                     new PropertyValueFactory<Article, String>("Name"));
         nameClmn.setCellFactory(TextFieldTableCell.forTableColumn());

@@ -44,7 +44,7 @@ public class StoreManager extends Application {
     @Override
     public void start(Stage primaryStage) {
         //Welcoming frame 
-        WelcomeFrame frame = new WelcomeFrame();
+        //WelcomeFrame frame = new WelcomeFrame();
         //Admin Frame
          AdminView admin = new AdminView();
         //Cashier Tab
@@ -52,33 +52,35 @@ public class StoreManager extends Application {
         //Recipe manager Tab
         RecipeView recipeView = new RecipeView();
        //Continue Button continue just to Cashier 
-        frame.btnCont.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Bello Cashier!");
-            }
-        });
-        // Log In button for Accesing the admin section
-        frame.btnLog.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                if(frame.pass.getText().intern() == "admin"){
-                    frame.warnText.setText("");
-                    admin.cashierTab.setContent(cashier.sp);
-                    admin.recipeTab.setContent(recipeView.sp);
-                    cashier.fillTable(articles);
-                    cashier.fillTableItems(recipe);
-//                    recipeView.fillTableRecipes(db.getRecipes());
-                    primaryStage.setTitle("Admin View");
-                    primaryStage.setScene(admin.getScene());
-                    admin.fillTable(articles);
-                    System.out.println("Bello Admin !!");
-                }
-                else{
-                    frame.warnText.setText("The Password is Incorrect!!!");
-                }
-            }
-        });
+//        frame.btnCont.setOnAction(new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent event) {
+//                System.out.println("Bello Cashier!");
+//            }
+//        });
+//        // Log In button for Accesing the admin section
+//        frame.btnLog.setOnAction(new EventHandler<ActionEvent>(){
+//            @Override
+//            public void handle(ActionEvent e){
+//                if(frame.pass.getText().intern() == "admin"){
+//                    frame.warnText.setText("");
+//
+//                }
+//                else{
+//                    frame.warnText.setText("The Password is Incorrect!!!");
+//                }
+//
+//            }
+//        });
+        admin.cashierTab.setContent(cashier.sp);
+        admin.recipeTab.setContent(recipeView.sp);
+        cashier.fillTable(articles);
+        cashier.fillTableItems(recipe);
+        recipeView.fillTableRecipes(db.getRecipes());
+        primaryStage.setTitle("Admin View");
+//        primaryStage.setScene(admin.getScene());
+        admin.fillTable(articles);
+        System.out.println("Bello Admin !!");
         // btn adding the element that is entered into Input Boxes
         admin.addButton.setOnAction(new EventHandler<ActionEvent>(){
             @Override 
@@ -106,7 +108,7 @@ public class StoreManager extends Application {
             admin.deleteBtn.setDisable(!(newSelection != null)); 
             if(newSelection != null){
                 Article ar = (Article) newSelection;
-                articleSwitch = new Article(ar.getName(),ar.getPrice());
+                articleSwitch = new Article(ar.getName(),ar.getPrice(),ar.getQuantity());
             }
         });
         // Commiting the edited Name Column in Article Table in Admin Tab
@@ -128,7 +130,7 @@ public class StoreManager extends Application {
                         ((Article) t.getTableView().getItems().get(
                                 t.getTablePosition().getRow())
                                 ).setName(t.getOldValue());
-                        articles.set(articles.indexOf(ar), new Article(t.getOldValue(),ar.getPrice()));
+                        articles.set(articles.indexOf(ar), new Article(t.getOldValue(),ar.getPrice(),ar.getQuantity()));
                         System.out.println("String is empty");
                     }
                     
@@ -153,12 +155,34 @@ public class StoreManager extends Application {
                         ((Article) t.getTableView().getItems().get(
                                 t.getTablePosition().getRow())
                                 ).setPrice(t.getOldValue());
-                        articles.set(articles.indexOf(ar), new Article(ar.getName(),t.getOldValue()));
+                        articles.set(articles.indexOf(ar), new Article(ar.getName(),t.getOldValue(),ar.getQuantity()));
                         System.out.println("String is empty");
                     }
                 }
             });
-        // Search bar for admin tab 
+        admin.quantityClmn.setOnEditCommit(
+            new EventHandler<TableColumn.CellEditEvent<Article, Integer>>() {
+                @Override
+                public void handle(TableColumn.CellEditEvent<Article, Integer> t) {
+                    System.out.println(t.getNewValue());
+                    if(t.getNewValue() != null){
+                        Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
+                        ((Article) t.getTableView().getItems().get(
+                                t.getTablePosition().getRow())
+                                ).setQuantity(t.getNewValue());
+                        db.updateArticle(articleSwitch,ar);
+                    }
+                    else{
+                        Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
+                        ((Article) t.getTableView().getItems().get(
+                                t.getTablePosition().getRow())
+                                ).setQuantity(t.getOldValue());
+                        articles.set(articles.indexOf(ar), new Article(ar.getName(),ar.getPrice(),t.getOldValue()));
+                        System.out.println("String is empty");
+                    }
+                }
+            });
+//         Search bar for admin tab 
         admin.searchArticles.textProperty().addListener(new ChangeListener<String>(){
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue){
@@ -170,7 +194,7 @@ public class StoreManager extends Application {
                         }   
                     }
                 }
-                else{
+                else if(newValue.toCharArray().length == 0){
                     articles.addAll(dataContainer);
                 }
             }
@@ -180,9 +204,13 @@ public class StoreManager extends Application {
             new ChangeListener<Tab>() {
                 @Override
                 public void changed(ObservableValue<? extends Tab> ov, Tab t, Tab t1) {
-                    if(t1.getText().equalsIgnoreCase("Lager")){
-                        articles.addAll(dataContainer);
+                    if(t.getText().equalsIgnoreCase("Cashier")){
+                        clearItemTable();
                     }
+//                    if(t1.getText().equalsIgnoreCase("Lager")){
+//                        
+//                        articles.addAll(dataContainer);
+//                    }
                     
                 }
             }
@@ -192,7 +220,7 @@ public class StoreManager extends Application {
             admin.deleteBtn.setDisable(!(newSelection != null)); 
             if(newSelection != null){
                 Article ar = (Article) newSelection;
-                toRecipe = new Item(ar.getName(),ar.getPrice(),itemID + 1);
+                toRecipe = new Item(ar.getName(),ar.getPrice());
             }
         });
         // adding article into Item Table with double click
@@ -200,7 +228,27 @@ public class StoreManager extends Application {
             TableRow<Article> row = new TableRow();
                 row.setOnMouseClicked(event ->{
                     if(event.getClickCount() == 2 &&(!row.isEmpty())){
-                        recipe.add(toRecipe);
+                        boolean contains = true;
+                        for(int i =0; i < recipe.size(); i++){
+                            if(recipe.get(i).getArticle().equals(toRecipe.getArticle())){
+                                recipe.get(i).setQuantity(recipe.get(i).getQuantity()+1);
+                                ObservableList<Item> recipeData = FXCollections.observableArrayList(recipe);
+                                recipe.clear();
+                                recipe.addAll(recipeData);
+                                contains = false;
+                            }
+                        }
+                        for(int i = 0; i < articles.size(); i++){
+                            if(articles.get(i).getName().equals(toRecipe.getArticle())){
+                                articles.get(i).setQuantity(articles.get(i).getQuantity() - 1);
+                                ObservableList<Article> arts =  FXCollections.observableArrayList(articles);
+                                articles.clear();
+                                articles.addAll(arts);
+                            }
+                        }
+                        if(contains){
+                            recipe.add(toRecipe);
+                        }
                     }
                 });
             return row;
@@ -217,7 +265,7 @@ public class StoreManager extends Application {
                     if(!articles.isEmpty()){
                         cashier.tableArticles.getSelectionModel().selectFirst();
                         Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-                        toRecipe = new Item(ar.getName(),ar.getPrice(),itemID + 1);
+                        toRecipe = new Item(ar.getName(),ar.getPrice());
                     }
                 }
                 else{
@@ -227,7 +275,7 @@ public class StoreManager extends Application {
             else if(e.getCode() == KeyCode.ENTER){
                 if(!cashier.tableArticles.getSelectionModel().isEmpty()){
                     Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-                    recipe.add(new Item(ar.getName(),ar.getPrice(),itemID + 1));
+                    recipe.add(new Item(ar.getName(),ar.getPrice()));
                 }
             }
         });
@@ -238,26 +286,52 @@ public class StoreManager extends Application {
             @Override
             public void handle(ActionEvent e){
                 Item it = (Item) cashier.tableItems.getSelectionModel().getSelectedItem();
+                for(int i =0; i < articles.size(); i++){
+                    if(articles.get(i).getName().contains(it.getArticle())){
+                        articles.get(i).setQuantity(articles.get(i).getQuantity() + it.getQuantity());
+                        dataContainer = FXCollections.observableArrayList(articles);
+                        articles.clear();
+                        articles.addAll(dataContainer);
+                    }
+                }
                 recipe.remove(it);
             }
         });
         cashier.restartRecipe.setOnAction(new EventHandler<ActionEvent>(){
            @Override
            public void handle(ActionEvent e){
-               recipe.clear();
+               clearItemTable();
            }
         });
         cashier.newRecipe.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                db.setRecipeToDb(new Recipe(itemID + 1,recipe));
-                itemID++;
+                db.setRecipeToDb(new Recipe(recipe));
+                db.updateArticlesQuantity(articles);
                 recipe.clear();
             }
         });
+        recipeView.tableRecipes.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
+            Recipe r = (Recipe) newSelection;
+            recipeView.fillTableItems(r.items);
+        });
+        System.out.println("This is executed");
         primaryStage.setTitle("Store Manager");
-        primaryStage.setScene(frame.CreateScene());
+        primaryStage.setScene(admin.getScene());
         primaryStage.show();
+    }
+    public void clearItemTable(){
+        for(int i =0; i < articles.size(); i++){
+            for(Item it : recipe){
+                if(articles.get(i).getName().equals(it.getArticle())){
+                 articles.get(i).setQuantity(articles.get(i).getQuantity() + it.getQuantity());
+                 dataContainer = FXCollections.observableArrayList(articles);
+                 articles.clear();
+                 articles.addAll(dataContainer);
+             }
+            }  
+         }
+        recipe.clear();
     }
 
     /**

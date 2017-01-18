@@ -6,6 +6,10 @@
 package storemanager.views;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -13,6 +17,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -117,6 +123,11 @@ public class RecipeView {
         
         // stack1 finsihed
         dayReportDatePicker = new DatePicker();
+        Date input = new Date();
+        Instant instant = input.toInstant();
+        ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
+        LocalDate date = zdt.toLocalDate();
+        dayReportDatePicker.setValue(date);
         dayReport = new Button("Print Day Report");
         
         hb1 = new HBox();
@@ -158,13 +169,12 @@ public class RecipeView {
         sp.getItems().addAll(stackP1,stackP2);
         sp.setDividerPositions(0.1f, 0.6f, 0.9f);
         
-        System.out.println("This is done ");
+
     }
     public SplitPane getSplitP(){
         return this.sp;
     }
     public void fillTableRecipes(ObservableList<Recipe> recipes){
-        System.out.println("Comes into this method ");
         this.tableRecipes.setItems(recipes);
         
     }

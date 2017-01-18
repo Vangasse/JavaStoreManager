@@ -45,13 +45,17 @@ public class Recipe {
         float totall = 0;
         return totall = items.stream().map((i) -> i.getPrice()).reduce(totall, (accumulator, _item) -> accumulator + _item);
     }
+    public void setTotal(){
+        float totall = 0;
+        totall = this.items.stream().map((it) -> it.getPrice()).reduce(totall, (accumulator, _item) -> accumulator + _item);
+        this.totallPrice = totall;
+    }
     
     public void setPropertiesFromDb(ObservableList<Item> items){
         this.totallPrice = this.getTotal(items);
         this.numberOfItems = new SimpleIntegerProperty(items.size());
         this.items = items;
     }
-    
     public ObservableList<Item> getItems(){
         return this.items;
     }

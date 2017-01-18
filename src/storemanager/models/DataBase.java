@@ -18,6 +18,7 @@ import java.util.Date;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+
 /**
  *
  * @author Haris
@@ -97,15 +98,7 @@ public class DataBase {
             DateFormat formater = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
             String inputText = recipe.getDate();
             Date dateDM = (Date)formater.parse(inputText);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dateDM);
-            int year = cal.get(Calendar.YEAR);
-            String month = (cal.get(Calendar.MONTH) > 8) ?  Integer.toString(cal.get(Calendar.MONTH)+1): "0"+Integer.toString(cal.get(Calendar.MONTH + 1 ));
-            String day = Integer.toString(cal.get(Calendar.DATE));
-            String hour = Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
-            String minutes = Integer.toString(cal.get(Calendar.MINUTE));
-            
-            String formatedDate =  year+ "-"+ month + "-" + day +" "+ hour+ ":"+minutes;
+            String formatedDate = this.dateFormater(dateDM);
             System.out.println("formatedDate : " + formatedDate);  
             ObservableList<Item> listOfItems = recipe.getItems();
             String queryRecipe = "INSERT INTO recipe (Date) VALUES ('"+formatedDate+"')";
@@ -165,6 +158,7 @@ public class DataBase {
                         r.items.add(it);
                     }
                 }
+                r.setTotal();
             }
             for(Recipe r : recipes){
                 r.setNumberOfItems(r.getItems().size());
@@ -186,6 +180,20 @@ public class DataBase {
             System.out.println("Query Update not executed");
         }
         
+    }
+    
+    public String dateFormater(Date dm){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dm);
+        int year = cal.get(Calendar.YEAR);
+        String month = (cal.get(Calendar.MONTH) > 8) ?  Integer.toString(cal.get(Calendar.MONTH)+1): "0"+Integer.toString(cal.get(Calendar.MONTH)+1);
+        String day = (cal.get(Calendar.DATE) > 10 ) ? Integer.toString(cal.get(Calendar.DATE)) : "0" + Integer.toString(cal.get(Calendar.DATE)) ;
+        String hour = Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
+        String minutes = Integer.toString(cal.get(Calendar.MINUTE));
+
+        String formatedDate =  year+ "-"+ month + "-" + day +" "+ hour+ ":"+minutes;
+        
+        return formatedDate;
     }
     
 }

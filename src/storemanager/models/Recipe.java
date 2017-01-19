@@ -5,6 +5,7 @@
  */
 package storemanager.models;
 
+import java.util.Calendar;
 import java.util.Date;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,12 +32,13 @@ public class Recipe {
         this.numberOfItems = new SimpleIntegerProperty(articles.size());
         this.totallPrice = getTotal(articles);
         this.dateOfCreating = new Date();
-        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
+        this.date = new SimpleStringProperty(dateFormater(this.dateOfCreating));
+
     }
     public Recipe(int id,Date dt){
         this.ID = new SimpleIntegerProperty(id);
         this.dateOfCreating = dt;
-        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
+        this.date = new SimpleStringProperty(dateFormater(dt));
         this.items = FXCollections.observableArrayList();
         this.numberOfItems = new SimpleIntegerProperty();
     }
@@ -100,6 +102,18 @@ public class Recipe {
     public void setDate(String date){
         this.date.set(date);
     }
-    
+    public String dateFormater(Date dm){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dm);
+        int year = cal.get(Calendar.YEAR);
+        String month = (cal.get(Calendar.MONTH) < 9 ) ? "0"+Integer.toString(cal.get(Calendar.MONTH)+1) : Integer.toString(cal.get(Calendar.MONTH)+1);
+        String day = (cal.get(Calendar.DATE) < 10 ) ? "0" + Integer.toString(cal.get(Calendar.DATE)) : Integer.toString(cal.get(Calendar.DATE));
+        String hour = Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
+        String minutes = Integer.toString(cal.get(Calendar.MINUTE));
+
+        String formatedDate =  year+ "-"+ month + "-" + day +" "+ hour+ ":"+minutes;
+        
+        return formatedDate;
+    }
     
 }

@@ -33,7 +33,7 @@ public class Cashier {
     public SplitPane sp;
     public StackPane stackP1,stackP2;
     public VBox vbArticles,vbItems;
-    public HBox hb1,hb2;
+    public HBox hb,hb1,hb2;
     public TextField searchArticle;
     public Label total;
     public Button deleteItem,restartRecipe,newRecipe;
@@ -43,12 +43,19 @@ public class Cashier {
         // creating NON editable Tables
         tableArticles = new TableView();
         tableArticles.setEditable(false);
-        tableArticles.setMinHeight(500);
+        tableArticles.setMinHeight(480);
         
         tableItems = new TableView();
         tableItems.setEditable(false);
-        tableItems.setMinHeight(500);
+        tableItems.setMinHeight(480);
         
+
+
+        
+        tableItems = new TableView();
+        tableItems.setEditable(false);
+        tableItems.setMinHeight(480);
+
         // Creating columns for Article Table
         nameArticles = new TableColumn("Article Name");
         nameArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.4));
@@ -97,7 +104,10 @@ public class Cashier {
         //elements for item side
         
         total = new Label("");
-        
+        hb = new HBox();
+        hb.setSpacing(10);
+        hb.setAlignment(Pos.BOTTOM_RIGHT);
+        hb.getChildren().add(total );
         deleteItem =  new Button("Delete");
         deleteItem.setDisable(true);
         deleteItem.setMinWidth(280);
@@ -110,7 +120,7 @@ public class Cashier {
         hb1 = new HBox();
         hb1.setSpacing(10);
         hb1.setAlignment(Pos.BOTTOM_CENTER);
-        hb1.getChildren().addAll(deleteItem, total );
+        hb1.getChildren().add(deleteItem );
         
         hb2 = new HBox();
         hb2.setSpacing(10);
@@ -123,7 +133,7 @@ public class Cashier {
         vbItems.setMinSize(300, 100);
         vbItems.setMaxSize(300, 300);
         vbItems.setSpacing(10);
-        vbItems.getChildren().addAll(tableItems,hb1,hb2);
+        vbItems.getChildren().addAll(tableItems,hb,hb1,hb2);
         
         vbArticles = new VBox();
         vbArticles.setAlignment(Pos.TOP_LEFT);

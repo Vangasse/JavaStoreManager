@@ -5,9 +5,11 @@
  */
 package storemanager;
 
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,6 +20,9 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -44,6 +49,8 @@ public class StoreManager extends Application {
     public ObservableList<Item> recipe = FXCollections.observableArrayList();
     public ObservableList<Recipe> recipesList = FXCollections.observableArrayList(db.getRecipes());
     public ObservableList<Recipe> printingList = FXCollections.observableArrayList();
+    public ObservableList<Recipe> recipesListContainer = FXCollections.observableArrayList(recipesList);
+
     Article articleSwitch;
     Item toRecipe;
     int itemID = db.getLastRecipeId();
@@ -58,6 +65,7 @@ public class StoreManager extends Application {
         //Recipe manager Tab
         RecipeView recipeView = new RecipeView();
        //Continue Button continue just to Cashier 
+
 //        frame.btnCont.setOnAction(new EventHandler<ActionEvent>() {
 //            @Override
 //            public void handle(ActionEvent event) {
@@ -85,6 +93,8 @@ public class StoreManager extends Application {
         cashier.fillTableItems(recipe);
         recipeView.fillTableRecipes(recipesList);
         primaryStage.setTitle("Admin View");
+        primaryStage.setResizable(false);
+
 //         Search bar for admin tab 
         FilteredList<Article> filteredArticles = new FilteredList<>(this.articles,p -> true);
         admin.searchArticles.textProperty().addListener((observable,oldValue,newValue)->{
@@ -133,6 +143,7 @@ public class StoreManager extends Application {
                 db.setArticle(article);
                 admin.addArticle.clear();
                 admin.addPrice.clear();
+                admin.addQuantity.clear();
             }
         });
         // Delete btn from admin tab deleting the transition element
@@ -165,6 +176,8 @@ public class StoreManager extends Application {
                                 t.getTablePosition().getRow())
                                 ).setName(t.getNewValue());
                         db.updateArticle(articleSwitch,ar);
+                        dataContainer.clear();
+                        dataContainer.addAll(articles);
                         System.out.println("String isn't empty" );
                     }
                     else{
@@ -191,6 +204,8 @@ public class StoreManager extends Application {
                                 t.getTablePosition().getRow())
                                 ).setPrice(t.getNewValue());
                         db.updateArticle(articleSwitch,ar);
+                        dataContainer.clear();
+                        dataContainer.addAll(articles);
                     }
                     else{
                         Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
@@ -202,6 +217,7 @@ public class StoreManager extends Application {
                     }
                 }
             });
+ 
         admin.quantityClmn.setOnEditCommit(
             new EventHandler<TableColumn.CellEditEvent<Article, Integer>>() {
                 @Override
@@ -213,6 +229,10 @@ public class StoreManager extends Application {
                                 t.getTablePosition().getRow())
                                 ).setQuantity(t.getNewValue());
                         db.updateArticle(articleSwitch,ar);
+
+                        dataContainer.clear();
+                        dataContainer.addAll(articles);
+
                     }
                     else{
                         Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
@@ -221,6 +241,7 @@ public class StoreManager extends Application {
                                 ).setQuantity(t.getOldValue());
                         articles.set(articles.indexOf(ar), new Article(ar.getName(),ar.getPrice(),t.getOldValue()));
                         System.out.println("String is empty");
+
                     }
                 }
             });
@@ -231,19 +252,20 @@ public class StoreManager extends Application {
             new ChangeListener<Tab>() {
                 @Override
                 public void changed(ObservableValue<? extends Tab> ov, Tab t, Tab t1) {
+
+                 
                     if(t.getText().equalsIgnoreCase("Cashier")){
                         clearItemTable();
+                        cashier.total.setText("");
                         cashier.searchArticle.textProperty().set("");
+                        admin.table.refresh();
                     }
                     else if(t.getText().equalsIgnoreCase("Lager")){
                         clearItemTable();
                         admin.searchArticles.textProperty().set("");
-                    }
-//                    if(t1.getText().equalsIgnoreCase("Lager")){
-//                        
-//                        articles.addAll(dataContainer);
-//                    }
-                    
+                        cashier.tableArticles.refresh();
+                        
+                    }                    
                 }
             }
         );
@@ -261,26 +283,40 @@ public class StoreManager extends Application {
                 row.setOnMouseClicked(event ->{
                     if(event.getClickCount() == 2 &&(!row.isEmpty())){
                         boolean contains = true;
-                        for(int i =0; i < recipe.size(); i++){
-                            if(recipe.get(i).getArticle().equals(toRecipe.getArticle())){
-                                recipe.get(i).setQuantity(recipe.get(i).getQuantity()+1);
-                                ObservableList<Item> recipeData = FXCollections.observableArrayList(recipe);
-                                recipe.clear();
-                                recipe.addAll(recipeData);
-                                contains = false;
-                            }
-                        }
+                        int indexArticle = -1;
                         for(int i = 0; i < articles.size(); i++){
                             if(articles.get(i).getName().equals(toRecipe.getArticle())){
-                                articles.get(i).setQuantity(articles.get(i).getQuantity() - 1);
-                                ObservableList<Article> arts =  FXCollections.observableArrayList(articles);
-                                articles.clear();
-                                articles.addAll(arts);
+                                indexArticle = i;
                             }
                         }
-                        if(contains){
-                            recipe.add(toRecipe);
+                        if(articles.get(indexArticle).getQuantity() > 0){
+                            for(int i =0; i < recipe.size(); i++){
+                                if(recipe.get(i).getArticle().equals(toRecipe.getArticle())){
+                                    recipe.get(i).setQuantity(recipe.get(i).getQuantity()+1);
+                                    articles.get(indexArticle).setQuantity(articles.get(indexArticle).getQuantity() - 1);
+                                    cashier.tableArticles.refresh();
+                                    cashier.tableItems.refresh();
+                                    contains = false;
+                                }
+                            }
+                        
+                            if(contains){
+                                recipe.add(toRecipe);
+                                articles.get(indexArticle).setQuantity(articles.get(indexArticle).getQuantity() - 1);
+                                cashier.tableArticles.refresh();
+                                cashier.tableItems.refresh();
+                            }
                         }
+                        else{
+                            Alert alert = new Alert(AlertType.WARNING);
+                            alert.setTitle("Article out of stock");
+                            alert.setHeaderText("It seems that article is out of stock");
+                            String articleName = articles.get(indexArticle).getName().toString();
+                            alert.setContentText("The article "+articleName+" is out of stock, please go to LAGER and edit quantity in order to use it !");
+                            alert.showAndWait();
+                        }
+                        float totall = refreshTotalInCashierTab();
+                        cashier.total.setText((totall > 0) ? "Totall:"+ String.valueOf(totall) : "");
                     }
                 });
             return row;
@@ -296,12 +332,13 @@ public class StoreManager extends Application {
                 for(int i =0; i < articles.size(); i++){
                     if(articles.get(i).getName().contains(it.getArticle())){
                         articles.get(i).setQuantity(articles.get(i).getQuantity() + it.getQuantity());
-                        dataContainer = FXCollections.observableArrayList(articles);
-                        articles.clear();
-                        articles.addAll(dataContainer);
+                        cashier.tableArticles.refresh();
                     }
                 }
+
                 recipe.remove(it);
+                float totall = refreshTotalInCashierTab();
+                cashier.total.setText((totall > 0) ? "Totall:"+ String.valueOf(totall) : "");
             }
         });
         cashier.restartRecipe.setOnAction(new EventHandler<ActionEvent>(){
@@ -317,9 +354,11 @@ public class StoreManager extends Application {
                 db.setRecipeToDb(newRecipe);
                 db.updateArticlesQuantity(articles);
                 recipesList.add(newRecipe);
+                recipesListContainer.add(newRecipe);
                 recipe.clear();
             }
         });
+
         recipeView.tableRecipes.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
             Recipe r = (Recipe) newSelection;
             recipeView.total.setText("Total: "+r.getTotallPrice());
@@ -329,19 +368,27 @@ public class StoreManager extends Application {
         recipeView.monthReport.setOnAction(new EventHandler<ActionEvent>(){
         @Override
             public void handle(ActionEvent e){
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(new Date());
+                int yearNum = cal.get(Calendar.YEAR);
+                String monthSelected = getNumberOfMonth(recipeView.monthsPick.getSelectionModel().getSelectedItem().toString());
+                String monthPicked = String.valueOf(yearNum)+"-"+monthSelected;
                 recipesList.forEach((r) -> {
                     String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(new Date());
-                    int yearNum = cal.get(Calendar.YEAR);
-                    String monthSelected = getNumberOfMonth(recipeView.monthsPick.getSelectionModel().getSelectedItem().toString());
-                    String monthPicked = String.valueOf(yearNum)+"-"+monthSelected;
-                    System.out.println(date+" "+monthPicked);
+
                     if (date.indexOf(monthPicked) != -1) {
                         printingList.add(r);
                     }
                 });
-                printReport(printingList);
+
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setTitle("Report ready to print");
+                alert.setHeaderText("Your Reports for specific month " +monthPicked+ " are ready");
+                alert.setContentText("There are "+ printingList.size() +" recipes in report sheet. Are you sure you want to print them ?");
+                Optional<ButtonType> result = alert.showAndWait();
+                if(result.get() == ButtonType.OK){
+                    printReport(printingList);
+                }
                 printingList.clear();
             }           
         });
@@ -355,28 +402,99 @@ public class StoreManager extends Application {
                     }
                 });
                 printReport(printingList);
+
+                String pickedDate = recipeView.dayReportDatePicker.getValue().toString();
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    if (pickedDate.equals(date)) {
+                        printingList.add(r);
+                    }
+                });
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setTitle("Report ready to print");
+                alert.setHeaderText("Your Reports for specific day " +pickedDate+ " are ready");
+                alert.setContentText("There are "+ printingList.size() +" recipes in report sheet. Are you sure you want to print them ?");
+                Optional<ButtonType> result = alert.showAndWait();
+                if(result.get() == ButtonType.OK){
+                    printReport(printingList);
+                }
                 printingList.clear();
             }
         });
         recipeView.yearReport.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
+                String year = recipeView.yearPick.getSelectionModel().getSelectedItem().toString();
                 recipesList.forEach((r) -> {
                     String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
-                    String year = recipeView.yearPick.getSelectionModel().getSelectedItem().toString();
+
                     if (date.contains(year)) {
                         printingList.add(r);
                     }
-                });
-                printReport(printingList);
+                });      
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setTitle("Report ready to print");
+                alert.setHeaderText("Your Reports for full " +year+ " ready");
+                alert.setContentText("There are "+ printingList.size() +" recipes in report sheet. Are you sure you want to print them ?");
+                Optional<ButtonType> result = alert.showAndWait();
+                if(result.get() == ButtonType.OK){
+                    printReport(printingList);
+                }
                 printingList.clear();
             }
         });
+        recipeView.filter.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                int monthNum = recipeView.comboMonth.getSelectionModel().getSelectedIndex()+ 1; 
+                String month = (monthNum < 10 )? "0"+String.valueOf(monthNum) :  String.valueOf(monthNum);
+                String year = recipeView.comboYear.getSelectionModel().getSelectedItem().toString();
+                int dayNum = Integer.parseInt(recipeView.dayPick.getSelectionModel().getSelectedItem().toString());
+                String day = (dayNum < 10)? "0"+String.valueOf(dayNum) : String.valueOf(dayNum);
+                String fullDate = year+"-"+month+"-"+day;
+                recipesList.clear();
+                if(recipeView.filter.getText().equals("Filter")){
+                    for(Recipe re:recipesListContainer){
+                        String dateInRecipe = re.getDate().substring(0,11);
+                        System.out.println(dateInRecipe+ " "+ fullDate);
+                        if(dateInRecipe.contains(fullDate)){
+                            recipesList.add(re);
+                        }
+                    }
+                    recipeView.filter.setText("Remove Filter");
+                }
+                else{
+                    recipesList.addAll(recipesListContainer);
+                    recipeView.filter.setText("Filter");
+                }
+                recipeView.tableRecipes.refresh();
+            }
+        });
+        recipeView.deleteRecipe.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                Recipe rec = (Recipe) recipeView.tableRecipes.getSelectionModel().getSelectedItem();
+                for(Article ar:articles){
+                    for(Item it: rec.getItems()){
+                        if (ar.getName().equals(it.getArticle())){
+                            ar.setQuantity(ar.getQuantity() + it.getQuantity());
+                        }
+                    }
+                }
+                db.updateArticlesQuantity(articles);
+                admin.table.refresh();
+                cashier.tableArticles.refresh();
+                recipeView.tableRecipes.getItems().remove(rec);
+                recipeView.tableRecipes.refresh();
+                db.removeRecipeFromDb(rec);
+                
+            }
+        });
         
+
         primaryStage.setTitle("Store Manager");
         primaryStage.setScene(admin.getScene());
         primaryStage.show();
     }
+
     public void clearItemTable(){
         for(int i =0; i < articles.size(); i++){
             for(Item it : recipe){
@@ -452,6 +570,12 @@ public class StoreManager extends Application {
                 break;
         }
         return "";
+    }
+
+    public float refreshTotalInCashierTab(){
+        float totall = 0;
+        totall = recipe.stream().map((it) -> (it.getPrice() * it.getQuantity())).reduce(totall, (accumulator, _item) -> accumulator + _item);
+        return totall;
     }
 
 

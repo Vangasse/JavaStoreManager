@@ -446,7 +446,7 @@ public class StoreManager extends Application {
         recipeView.filter.setOnAction(new EventHandler<ActionEvent>() {
             @Override public void handle(ActionEvent e) {
                 int monthNum = recipeView.comboMonth.getSelectionModel().getSelectedIndex()+ 1; 
-                String month = (monthNum < 10  )? "0"+String.valueOf(monthNum) :  String.valueOf(monthNum);
+                String month = (monthNum < 10 )? "0"+String.valueOf(monthNum) :  String.valueOf(monthNum);
                 String year = recipeView.comboYear.getSelectionModel().getSelectedItem().toString();
                 int dayNum = Integer.parseInt(recipeView.dayPick.getSelectionModel().getSelectedItem().toString());
                 String day = (dayNum < 10)? "0"+String.valueOf(dayNum) : String.valueOf(dayNum);

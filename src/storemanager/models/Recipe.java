@@ -43,12 +43,20 @@ public class Recipe {
     
     public float getTotal(ObservableList<Item> items){
         float totall = 0;
-        return totall = items.stream().map((i) -> i.getPrice()).reduce(totall, (accumulator, _item) -> accumulator + _item);
+        for(Item it:items){
+            totall += (it.getPrice() * it.getQuantity());
+        }
+        return totall;
     }
     public void setTotal(){
         float totall = 0;
-        totall = this.items.stream().map((it) -> it.getPrice()).reduce(totall, (accumulator, _item) -> accumulator + _item);
+        for(Item it:items){
+            totall += (it.getPrice() * it.getQuantity());
+        }
         this.totallPrice = totall;
+    }
+    public void setTotallPrice(){
+        
     }
     
     public void setPropertiesFromDb(ObservableList<Item> items){

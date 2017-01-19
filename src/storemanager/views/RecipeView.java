@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
@@ -19,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -51,7 +53,7 @@ public class RecipeView {
     public SplitPane sp;
     public StackPane stackP1,stackP2;
     public VBox vbRecipes,vbItems;
-    public HBox hb1,hb2,hb3;
+    public HBox hb1,hb2,hb3,hb4;
     public TextField searchArticle;
     public Label total;
     public Button dayReport,monthReport,yearReport;
@@ -64,9 +66,11 @@ public class RecipeView {
         // creating NON editable Tables
         tableRecipes = new TableView();
         tableRecipes.setEditable(false);
+        tableRecipes.setMinHeight(500);
         
         tableRecipeItems = new TableView();
         tableRecipeItems.setEditable(false);
+        tableRecipeItems.setMinHeight(350);
 //         Creating columns for Recipe Table
         dateRecipe = new TableColumn("Recipe Made On");
         dateRecipe.prefWidthProperty().bind(tableRecipes.widthProperty().multiply(0.4));
@@ -104,7 +108,7 @@ public class RecipeView {
         itemsQuantity.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         
         recipeSearchDate = new DatePicker();
-
+        recipeSearchDate.setMinWidth(290);
         //storing columns into Table
         tableRecipes.getColumns().addAll(dateRecipe,RecipeID,numOfItems);
         tableRecipeItems.getColumns().addAll(nameItems,itemsQuantity,priceItems);
@@ -136,14 +140,21 @@ public class RecipeView {
         hb1.getChildren().addAll(dayReportDatePicker, dayReport );
         
         monthsPick = new ChoiceBox(FXCollections.observableArrayList(months));
+        monthsPick.getSelectionModel().selectFirst();
         monthReport = new Button("Print Month Report");
+        
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        int yearNum = cal.get(Calendar.YEAR);
+        Label year = new Label(String.valueOf(yearNum));
         
         hb2 = new HBox();
         hb2.setSpacing(10);
         hb2.setAlignment(Pos.BOTTOM_CENTER);
-        hb2.getChildren().addAll(monthsPick, monthReport );
+        hb2.getChildren().addAll(monthsPick,year, monthReport );
         
-        yearPick = new ChoiceBox(FXCollections.observableArrayList("2016","2017"));
+        yearPick = new ChoiceBox(FXCollections.observableArrayList("2017","2018"));
+        yearPick.getSelectionModel().selectFirst();
         yearReport = new Button("Print Year Report");
         
         hb3 = new HBox();
@@ -151,7 +162,13 @@ public class RecipeView {
         hb3.setAlignment(Pos.BOTTOM_CENTER);
         hb3.getChildren().addAll(yearPick, yearReport);
         
-
+        total = new Label("");
+        hb4 = new HBox();
+        hb4.setSpacing(10);
+        hb4.setStyle("-fx-padding: 0 10 0 0;");
+        hb4.setAlignment(Pos.BOTTOM_RIGHT);
+        hb4.getChildren().add(total);
+        
         
         vbItems = new VBox();
         vbItems.setAlignment(Pos.TOP_LEFT);
@@ -159,7 +176,7 @@ public class RecipeView {
         vbItems.setMinSize(300, 100);
         vbItems.setMaxSize(300, 300);
         vbItems.setSpacing(10);
-        vbItems.getChildren().addAll(tableRecipeItems,hb1,hb2,hb3);
+        vbItems.getChildren().addAll(tableRecipeItems,hb4,hb1,hb2,hb3);
         
         stackP2 = new StackPane();
         stackP2.setAlignment(Pos.TOP_LEFT);

@@ -43,9 +43,12 @@ public class Cashier {
         // creating NON editable Tables
         tableArticles = new TableView();
         tableArticles.setEditable(false);
+        tableArticles.setMinHeight(500);
         
         tableItems = new TableView();
         tableItems.setEditable(false);
+        tableItems.setMinHeight(500);
+        
         // Creating columns for Article Table
         nameArticles = new TableColumn("Article Name");
         nameArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.4));
@@ -97,8 +100,12 @@ public class Cashier {
         
         deleteItem =  new Button("Delete");
         deleteItem.setDisable(true);
+        deleteItem.setMinWidth(280);
         restartRecipe = new Button("Restart");
+        restartRecipe.setMinWidth(140);
+        
         newRecipe = new Button("Sold");
+        newRecipe.setMinWidth(140);
         
         hb1 = new HBox();
         hb1.setSpacing(10);

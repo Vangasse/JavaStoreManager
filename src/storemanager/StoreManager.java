@@ -6,6 +6,8 @@
 package storemanager;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -22,10 +24,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import storemanager.models.Article;
-import storemanager.models.DataBase;
-import storemanager.models.Item;
-import storemanager.models.Recipe;
+import storemanager.models.*;
 import storemanager.views.AdminView;
 import storemanager.views.Cashier;
 import storemanager.views.RecipeView;
@@ -287,31 +286,6 @@ public class StoreManager extends Application {
             return row;
         });
         // search in cashier table of articles and passing it into recipe table with ENTER button
-//        cashier.searchArticle.addEventFilter(KeyEvent.KEY_PRESSED,e ->{
-//            System.out.println(e.getText());
-//            if(e.getText().matches("[a-zA-Z0-9]") || e.getCode() == KeyCode.BACK_SPACE){
-//                if(cashier.searchArticle.getText().toCharArray().length > 0){
-//                    articles.clear();
-//                    dataContainer.stream().filter((a) -> (a.getName().toLowerCase().contains(cashier.searchArticle.getText().toLowerCase()))).forEachOrdered((a) -> {
-//                        articles.add(a);
-//                    });
-//                    if(!articles.isEmpty()){
-//                        cashier.tableArticles.getSelectionModel().selectFirst();
-//                        Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-//                        toRecipe = new Item(ar.getName(),ar.getPrice());
-//                    }
-//                }
-//                else{
-//                    articles.addAll(dataContainer);
-//                }
-//            }
-//            else if(e.getCode() == KeyCode.ENTER){
-//                if(!cashier.tableArticles.getSelectionModel().isEmpty()){
-//                    Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-//                    recipe.add(new Item(ar.getName(),ar.getPrice()));
-//                }
-//            }
-//        });
         cashier.tableItems.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
             cashier.deleteItem.setDisable(!(newSelection != null));
         });
@@ -339,48 +313,66 @@ public class StoreManager extends Application {
         cashier.newRecipe.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                db.setRecipeToDb(new Recipe(recipe));
+                Recipe newRecipe = new Recipe(recipe);
+                db.setRecipeToDb(newRecipe);
                 db.updateArticlesQuantity(articles);
+                recipesList.add(newRecipe);
                 recipe.clear();
             }
         });
         recipeView.tableRecipes.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
             Recipe r = (Recipe) newSelection;
+            recipeView.total.setText("Total: "+r.getTotallPrice());
             recipeView.fillTableItems(r.items);
+            
+        });
+        recipeView.monthReport.setOnAction(new EventHandler<ActionEvent>(){
+        @Override
+            public void handle(ActionEvent e){
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(new Date());
+                    int yearNum = cal.get(Calendar.YEAR);
+                    String monthSelected = getNumberOfMonth(recipeView.monthsPick.getSelectionModel().getSelectedItem().toString());
+                    String monthPicked = String.valueOf(yearNum)+"-"+monthSelected;
+                    System.out.println(date+" "+monthPicked);
+                    if (date.indexOf(monthPicked) != -1) {
+                        printingList.add(r);
+                    }
+                });
+                printReport(printingList);
+                printingList.clear();
+            }           
         });
         recipeView.dayReport.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                Output out = new Output();
-                ArrayList<String> mylist = new ArrayList<String>();
                 recipesList.forEach((r) -> {
                     String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
                     if (recipeView.dayReportDatePicker.getValue().toString().equals(date)) {
                         printingList.add(r);
                     }
                 });
-                printingList.forEach((r) -> {
-                    mylist.add("This is Recipe with ID " + r.getID());
-                    mylist.add("------------------------------------"+"\n");
-                    mylist.add("Created on " + r.getDateOfCreating()+"\n");
-                    mylist.add("------------------------------------"+"\n");
-                    mylist.add("With " + r.getNumberOfItems() +" items bought"+"\n");
-                    mylist.add("------------------------------------"+"\n");
-                    mylist.add("Items are"+"\n");
-                    for(Item it: r.getItems()){
-                        mylist.add(it.getArticle()+"----------------"+it.getPrice()+"\n");
-                        
-                    }
-                    mylist.add("------------------------------------"+"\n");
-                    mylist.add("Total: "+r.getTotallPrice()+"\n");
-                    mylist.add("------------------------------------"+"\n");
-                    mylist.add("------------------------------------"+"\n");
-
-                    
-                });
-                out.printRecipes(mylist);
+                printReport(printingList);
+                printingList.clear();
             }
         });
+        recipeView.yearReport.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent e){
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    String year = recipeView.yearPick.getSelectionModel().getSelectedItem().toString();
+                    if (date.contains(year)) {
+                        printingList.add(r);
+                    }
+                });
+                printReport(printingList);
+                printingList.clear();
+            }
+        });
+        
         primaryStage.setTitle("Store Manager");
         primaryStage.setScene(admin.getScene());
         primaryStage.show();
@@ -398,6 +390,70 @@ public class StoreManager extends Application {
          }
         recipe.clear();
     }
+    public void printReport(ObservableList<Recipe> printingList){
+        Output out = new Output();
+        ArrayList<OutputStringLine> mylist = new ArrayList<OutputStringLine>();
+        if(!printingList.isEmpty()){
+            printingList.forEach((r) -> {
+            mylist.add(new OutputStringLine("This is Recipe with ID " + r.getID(),ParagraphType.Title));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Created on " + r.getDateOfCreating(),ParagraphType.ItalicHeading));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("With " + r.getNumberOfItems() +" items bought",ParagraphType.Normal));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Items are",ParagraphType.Normal));
+
+            for(Item it: r.getItems()){
+                String articleName = it.getArticle()+" "+it.getQuantity()+"x ";
+                mylist.add(new OutputStringLine(articleName,ParagraphType.Normal,it.getPrice()));
+
+            }
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Total: "+r.getTotallPrice(),ParagraphType.Normal));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+
+
+            });
+        out.printRecipes(mylist);
+        }
+        else{
+            System.out.println("Nothing to PRINT");
+        }
+    }
+    public String getNumberOfMonth(String month){
+        switch(month){
+            case "January":
+                return "01";
+             case "February":
+                return "02"; 
+            case "March":
+                return "03";
+            case "April":
+                return "04";
+            case "May":
+                return "05";
+            case "June":
+                return "06";
+            case "July":
+                return "07";
+            case "Avgust":
+                return "08";
+            case "September":
+                return "09";
+            case "Octomber":
+                return "10";
+            case "November":
+                return "11";
+            case "December":
+                return "12";
+            default:
+                break;
+        }
+        return "";
+    }
+
 
     /**
      * @param args the command line arguments

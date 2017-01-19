@@ -22,17 +22,26 @@ public class Output {
     public Output(){
            
     }
-    public void printRecipes(ArrayList<String> list){
+    public void printRecipes(ArrayList<OutputStringLine> list){
         try{
             SimpleDateFormat sdfDate = new SimpleDateFormat("yyyyMMdd HHmmss");//dd/MM/yyyy
             Date now = new Date();
             String strDate = sdfDate.format(now);
             document = new XWPFDocument();
             out = new FileOutputStream(new File(strDate+" Report.docx"));
-            for(String item:list){
+            for(OutputStringLine item:list){
                 XWPFParagraph paragraph = document.createParagraph();
                 XWPFRun run = paragraph.createRun();
-                run.setText(item);
+                if(item.getType() == ParagraphType.Title){
+                    run.setFontSize(18);
+                    run.setBold(true);
+                }
+                else if(item.getType() == ParagraphType.ItalicHeading){
+                    run.setFontSize(12);
+                    run.setItalic(true);
+                }
+                
+                run.setText(item.getText());
             }
             document.write(out);
             out.close();

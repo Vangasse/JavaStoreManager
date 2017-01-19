@@ -61,6 +61,7 @@ public class AdminView {
         // creating the button for adding new elements
         addButton = new Button("Add");
         addButton.setDisable(true);
+        addButton.setMinSize(600, 30);
         // creating the columns and data that they accept
         nameClmn = new TableColumn("Artical Name");
         nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
@@ -82,15 +83,15 @@ public class AdminView {
         //creating text fields and their functionalities denying to enter empty values
         addArticle = new TextField();
         addArticle.setPromptText("Add Article");
-        addArticle.setPrefWidth(170);
+        addArticle.setPrefWidth(195);
         
         addPrice = new TextField();
         addPrice.setPromptText("Add Price");
-        addPrice.setPrefWidth(170);
+        addPrice.setPrefWidth(195);
         
         addQuantity = new TextField();
         addQuantity.setPromptText("Add Price");
-        addQuantity.setPrefWidth(170);
+        addQuantity.setPrefWidth(195);
         //functionalty to enable text field when they are filled out 
         addPrice.textProperty().addListener(new ChangeListener<String>(){
             @Override
@@ -118,7 +119,7 @@ public class AdminView {
         
 
         table.getColumns().addAll(nameClmn, priceClmn,quantityClmn);
-    
+        table.setMinWidth(600);
         hb = new HBox();
         hb.setSpacing(10);
         hb.setAlignment(Pos.BOTTOM_LEFT);
@@ -128,22 +129,31 @@ public class AdminView {
         //left
         searchArticles = new TextField();
         searchArticles.setPromptText("Search Articles");
-        searchArticles.setPrefWidth(400);
+        searchArticles.setMinWidth(600);
         vb = new VBox();
         vb.setAlignment(Pos.TOP_LEFT);
         
         
         vb.setSpacing(10);
         deleteBtn = new Button("Delete");
+        deleteBtn.setMinSize(600, 30);
         deleteBtn.setDisable(true);
-        vb.getChildren().addAll(table,searchArticles,hb,addButton,deleteBtn);
+        HBox searchBox = new HBox();
+        searchBox.setSpacing(10);
+        searchBox.getChildren().add(searchArticles);
+        HBox addBox = new HBox();
+        addBox.setSpacing(10);
+        addBox.getChildren().add(addButton);
+        HBox deleteBox = new HBox();
+        deleteBox.setSpacing(10);
+        deleteBox.getChildren().add(deleteBtn);
+        vb.getChildren().addAll(table,searchBox,hb,addBox,deleteBox);
         vb.setVgrow(table,Priority.ALWAYS);
         HBox hBox = new HBox();
         hBox.setHgrow(tabPane,Priority.ALWAYS);
         hBox.getChildren().addAll(tabPane,vb);
         //adding them into TAB
-        lagerTab.setContent(hBox);
-                
+        lagerTab.setContent(hBox);  
         cashierTab = new Tab();
         cashierTab.setText("Cashier");
         cashierTab.setClosable(false);

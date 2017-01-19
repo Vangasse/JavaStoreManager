@@ -29,7 +29,7 @@ import storemanager.models.Item;
  */
 public class Cashier {
     public TableView tableArticles,tableItems;
-    public TableColumn nameArticles,priceArticles,nameItems,priceItems,itemsQuantity;
+    public TableColumn nameArticles,priceArticles,quantityArticles,nameItems,priceItems,itemsQuantity;
     public SplitPane sp;
     public StackPane stackP1,stackP2;
     public VBox vbArticles,vbItems;
@@ -43,22 +43,30 @@ public class Cashier {
         // creating NON editable Tables
         tableArticles = new TableView();
         tableArticles.setEditable(false);
+        tableArticles.setMinHeight(500);
         
         tableItems = new TableView();
         tableItems.setEditable(false);
+        tableItems.setMinHeight(500);
+        
         // Creating columns for Article Table
         nameArticles = new TableColumn("Article Name");
-        nameArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.5));
-        
+        nameArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.4));
         nameArticles.setCellValueFactory(
                     new PropertyValueFactory<Article, String>("Name"));
         nameArticles.setCellFactory(TextFieldTableCell.forTableColumn());
         
         priceArticles = new TableColumn("Article Price");
-        priceArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.5));
+        priceArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.3));
         priceArticles.setCellValueFactory(
                     new PropertyValueFactory<Article, String>("Price"));
         priceArticles.setCellFactory(TextFieldTableCell.forTableColumn(new FloatStringConverter()));
+        
+        quantityArticles = new TableColumn("Article Quantity");
+        quantityArticles.prefWidthProperty().bind(tableArticles.widthProperty().multiply(0.3));
+        quantityArticles.setCellValueFactory(
+                    new PropertyValueFactory<Article, String>("Quantity"));
+        quantityArticles.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         
         nameItems = new TableColumn("Article");
         nameItems.prefWidthProperty().bind(tableItems.widthProperty().multiply(0.3));
@@ -83,7 +91,7 @@ public class Cashier {
         searchArticle.setPrefWidth(400);
         
         //storing columns into Table
-        tableArticles.getColumns().addAll(nameArticles,priceArticles);
+        tableArticles.getColumns().addAll(nameArticles,priceArticles,quantityArticles);
         tableItems.getColumns().addAll(nameItems,itemsQuantity,priceItems);
         
         //elements for item side
@@ -92,8 +100,12 @@ public class Cashier {
         
         deleteItem =  new Button("Delete");
         deleteItem.setDisable(true);
+        deleteItem.setMinWidth(280);
         restartRecipe = new Button("Restart");
+        restartRecipe.setMinWidth(140);
+        
         newRecipe = new Button("Sold");
+        newRecipe.setMinWidth(140);
         
         hb1 = new HBox();
         hb1.setSpacing(10);
@@ -143,6 +155,6 @@ public class Cashier {
         tableItems.setItems(items);
     }
     public Item getItem(Article article){
-        return new Item(article.getName(),article.getPrice(),5);
+        return new Item(article.getName(),article.getPrice());
     }
 }

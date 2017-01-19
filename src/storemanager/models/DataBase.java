@@ -9,11 +9,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Time;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
 
 /**
  *
@@ -57,7 +61,7 @@ public class DataBase {
         }  
     }
     public void setArticle(Article article){
-        String query = "INSERT INTO articles ( ArticleName, Price) VALUES ('"+article.getName()+"','"+article.getPrice()+"')";
+        String query = "INSERT INTO articles ( ArticleName, Price,Quantity) VALUES ('"+article.getName()+"','"+article.getPrice()+"','"+article.getQuantity()+"')";
         try{
             stmt.executeUpdate(query);
             System.out.println("Querry succesfully fullfiled");
@@ -79,27 +83,34 @@ public class DataBase {
 //        UPDATE `articles` SET `ArticleName` = 'Fun Dog Adult 1kg' WHERE `articles`.`ID` = 1;
         String query = "UPDATE articles SET ArticleName = '"+newArticle.getName()+"' WHERE articles.ArticleName ='"+ oldArticle.getName()+"'";
         String queryTwo = "UPDATE articles SET Price = '"+newArticle.getPrice()+"' WHERE articles.ArticleName ='"+ oldArticle.getName()+"'";
+        String queryThree = "UPDATE articles SET Quantity = '"+newArticle.getQuantity()+"' WHERE articles.ArticleName ='"+ oldArticle.getName()+"'";
         try{
             stmt.executeUpdate(query);
             stmt.executeUpdate(queryTwo);
+            stmt.executeUpdate(queryThree);
             System.out.println("Querry succesfully fullfiled");
         }catch(Exception e){
             System.out.println("Failed to update database"+ e);
         }
     }
     public void setRecipeToDb(Recipe recipe){
-        ObservableList<Item> listOfItems = recipe.getItems();
-        String date = dateFormater.format(recipe.getDate());
-        String queryRecipe = "INSERT INTO recipe (Date) VALUES ('"+date+"')";
         try{
+            DateFormat formater = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+            String inputText = recipe.getDate();
+            Date dateDM = (Date)formater.parse(inputText);
+            String formatedDate = this.dateFormater(dateDM);
+            System.out.println("formatedDate : " + formatedDate);  
+            ObservableList<Item> listOfItems = recipe.getItems();
+            String queryRecipe = "INSERT INTO recipe (Date) VALUES ('"+formatedDate+"')";
             stmt.executeUpdate(queryRecipe);
+            
             for(Item it: listOfItems){
                 String queryItem = "INSERT INTO items (ArticleName, ArticlePrice,Quantity,RecipeID) VALUES ('"+it.getArticle()+"', '"+it.getPrice()+"', '"+it.getQuantity()+"', '"+it.getRecipeID()+"');";
                 stmt.executeUpdate(queryItem);
                 System.out.println("Query succesfully executed");
             }
-        }catch(Exception e){
-            System.out.println("Query failed to execute because \n"+e);
+        }catch(Exception ex){
+            System.out.println("Failed to execute query");
         }
     }
     public int getLastRecipeId(){
@@ -118,7 +129,7 @@ public class DataBase {
         }
         return (lastID != 0)? lastID : 0;
     }
-    public  ObservableList<Recipe> getRecipes(){
+    public ObservableList<Recipe> getRecipes(){
         String getRecipes = "SELECT * FROM recipe";
         String getItems = "SELECT * FROM items";
         ObservableList<Recipe> recipes = FXCollections.observableArrayList();
@@ -128,7 +139,8 @@ public class DataBase {
             while(result.next()){
                 int id = result.getInt("ID");
                 Date dt = dateFormater.parse(result.getString("Date"));
-                recipes.add(new Recipe(id,dt));
+                Recipe rec = new Recipe(id,dt);
+                recipes.add(rec);
             }
             result = stmt.executeQuery(getItems);
             while(result.next()){
@@ -146,12 +158,42 @@ public class DataBase {
                         r.items.add(it);
                     }
                 }
+                r.setTotal();
             }
+            for(Recipe r : recipes){
+                r.setNumberOfItems(r.getItems().size());
+            }
+            
             return recipes;
         }catch(Exception e){
             System.out.println("Query failed to executed ");
             return recipes;
         }
+    }
+    public void updateArticlesQuantity(ObservableList<Article> articles){
+        try{
+            for(Article ar: articles){
+                String query = "UPDATE articles SET Quantity = '"+ar.getQuantity()+"' WHERE articles.ArticleName ='"+ar.getName()+"'";
+                stmt.executeUpdate(query);
+            }
+        }catch(Exception e){
+            System.out.println("Query Update not executed");
+        }
+        
+    }
+    
+    public String dateFormater(Date dm){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dm);
+        int year = cal.get(Calendar.YEAR);
+        String month = (cal.get(Calendar.MONTH) > 8) ?  Integer.toString(cal.get(Calendar.MONTH)+1): "0"+Integer.toString(cal.get(Calendar.MONTH)+1);
+        String day = (cal.get(Calendar.DATE) > 10 ) ? Integer.toString(cal.get(Calendar.DATE)) : "0" + Integer.toString(cal.get(Calendar.DATE)) ;
+        String hour = Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
+        String minutes = Integer.toString(cal.get(Calendar.MINUTE));
+
+        String formatedDate =  year+ "-"+ month + "-" + day +" "+ hour+ ":"+minutes;
+        
+        return formatedDate;
     }
     
 }

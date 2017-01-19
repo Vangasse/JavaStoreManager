@@ -12,7 +12,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
@@ -22,7 +21,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.FloatStringConverter;
 import javafx.util.converter.IntegerStringConverter;
@@ -43,11 +42,7 @@ public class AdminView {
     public TextField addArticle,addPrice,searchArticles,addQuantity;
     public HBox hb,wraper;
     public VBox vb, sideB;
-    public StackPane  lagerStackPt1,lagerStackPt2;
-    public SplitPane  sp;
     public TableColumn priceClmn ,nameClmn,quantityClmn ;
-    
-    
     
     public AdminView(){
         root = new Group();
@@ -66,9 +61,10 @@ public class AdminView {
         // creating the button for adding new elements
         addButton = new Button("Add");
         addButton.setDisable(true);
+        addButton.setMinSize(600, 30);
         // creating the columns and data that they accept
         nameClmn = new TableColumn("Artical Name");
-        nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.3));
+        nameClmn.prefWidthProperty().bind(table.widthProperty().multiply(0.4));
         nameClmn.setCellValueFactory(
                     new PropertyValueFactory<Article, String>("Name"));
         nameClmn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -87,15 +83,15 @@ public class AdminView {
         //creating text fields and their functionalities denying to enter empty values
         addArticle = new TextField();
         addArticle.setPromptText("Add Article");
-        addArticle.setPrefWidth(170);
+        addArticle.setPrefWidth(195);
         
         addPrice = new TextField();
         addPrice.setPromptText("Add Price");
-        addPrice.setPrefWidth(170);
+        addPrice.setPrefWidth(195);
         
         addQuantity = new TextField();
         addQuantity.setPromptText("Add Price");
-        addQuantity.setPrefWidth(170);
+        addQuantity.setPrefWidth(195);
         //functionalty to enable text field when they are filled out 
         addPrice.textProperty().addListener(new ChangeListener<String>(){
             @Override
@@ -123,51 +119,41 @@ public class AdminView {
         
 
         table.getColumns().addAll(nameClmn, priceClmn,quantityClmn);
-    
+        table.setMinWidth(600);
         hb = new HBox();
         hb.setSpacing(10);
         hb.setAlignment(Pos.BOTTOM_LEFT);
-        hb.getChildren().addAll(addArticle, addPrice, addButton,addQuantity);
+        hb.getChildren().addAll(addArticle, addPrice,addQuantity);
 
         //creating to Vertical Boxes to separate content and the 
         //left
         searchArticles = new TextField();
         searchArticles.setPromptText("Search Articles");
-        searchArticles.setPrefWidth(400);
+        searchArticles.setMinWidth(600);
         vb = new VBox();
         vb.setAlignment(Pos.TOP_LEFT);
-        vb.setPrefSize(400, 200);
-        vb.setMinSize(400, 200);
-        vb.setMaxSize(400, 500);
+        
+        
         vb.setSpacing(10);
-        vb.getChildren().addAll(table,searchArticles,hb);
-        //right side
-        sideB = new VBox();
-        sideB.setAlignment(Pos.TOP_RIGHT);
-        sideB.setPrefSize(100, 200);
-        sideB.setMinSize(100, 200);
-        sideB.setMaxSize(100, 500);
         deleteBtn = new Button("Delete");
+        deleteBtn.setMinSize(600, 30);
         deleteBtn.setDisable(true);
-        sideB.getChildren().addAll(deleteBtn);
-        //wrapper for  sideB which is vertical box for button
-        wraper = new HBox();
-        wraper.getChildren().addAll(sideB);
-        // stack pane for right wrapping it into node
-        lagerStackPt2 = new StackPane();
-        lagerStackPt2.setAlignment(Pos.TOP_RIGHT);
-        lagerStackPt2.getChildren().add(wraper);
-        // stack pane for left wrapping it into node
-        lagerStackPt1 = new StackPane();
-        lagerStackPt1.setAlignment(Pos.TOP_LEFT);
-        lagerStackPt1.getChildren().add(vb);
-        //split pane like a node for splited TAB
-        sp = new SplitPane();
-        sp.getItems().addAll(lagerStackPt1,lagerStackPt2);
-        sp.setDividerPositions(0.3f, 0.6f, 0.9f);
+        HBox searchBox = new HBox();
+        searchBox.setSpacing(10);
+        searchBox.getChildren().add(searchArticles);
+        HBox addBox = new HBox();
+        addBox.setSpacing(10);
+        addBox.getChildren().add(addButton);
+        HBox deleteBox = new HBox();
+        deleteBox.setSpacing(10);
+        deleteBox.getChildren().add(deleteBtn);
+        vb.getChildren().addAll(table,searchBox,hb,addBox,deleteBox);
+        vb.setVgrow(table,Priority.ALWAYS);
+        HBox hBox = new HBox();
+        hBox.setHgrow(tabPane,Priority.ALWAYS);
+        hBox.getChildren().addAll(tabPane,vb);
         //adding them into TAB
-        lagerTab.setContent(sp);
-                
+        lagerTab.setContent(hBox);  
         cashierTab = new Tab();
         cashierTab.setText("Cashier");
         cashierTab.setClosable(false);

@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleIntegerProperty;
  * @author Haris
  */
 public class Article {
+    
     public SimpleStringProperty name;
     public SimpleFloatProperty price;
     public SimpleIntegerProperty quantity;
@@ -27,6 +28,12 @@ public class Article {
     }
     public String getName(){
         return this.name.get();
+    }
+    public void setQuantity(int articleQuantity){
+        this.quantity.set(articleQuantity);
+    }
+    public int getQuantity(){
+        return this.quantity.get();
     }
     public void setPrice(float articlePrice){
         this.price.set(articlePrice);

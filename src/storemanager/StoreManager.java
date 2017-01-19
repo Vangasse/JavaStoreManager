@@ -5,11 +5,16 @@
  */
 package storemanager;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -19,14 +24,13 @@ import javafx.scene.control.TableRow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import storemanager.models.Article;
-import storemanager.models.DataBase;
-import storemanager.models.Item;
-import storemanager.models.Recipe;
+import storemanager.models.*;
 import storemanager.views.AdminView;
 import storemanager.views.Cashier;
 import storemanager.views.RecipeView;
 import storemanager.views.WelcomeFrame;
+import storemanager.models.Output;
+
 
 /**
  *
@@ -38,13 +42,15 @@ public class StoreManager extends Application {
     public ObservableList<Article> articles = db.GetData();
     public ObservableList<Article> dataContainer = FXCollections.observableArrayList(articles);
     public ObservableList<Item> recipe = FXCollections.observableArrayList();
+    public ObservableList<Recipe> recipesList = FXCollections.observableArrayList(db.getRecipes());
+    public ObservableList<Recipe> printingList = FXCollections.observableArrayList();
     Article articleSwitch;
     Item toRecipe;
     int itemID = db.getLastRecipeId();
     @Override
     public void start(Stage primaryStage) {
         //Welcoming frame 
-        WelcomeFrame frame = new WelcomeFrame();
+        //WelcomeFrame frame = new WelcomeFrame();
         //Admin Frame
          AdminView admin = new AdminView();
         //Cashier Tab
@@ -52,33 +58,71 @@ public class StoreManager extends Application {
         //Recipe manager Tab
         RecipeView recipeView = new RecipeView();
        //Continue Button continue just to Cashier 
-        frame.btnCont.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Bello Cashier!");
-            }
-        });
-        // Log In button for Accesing the admin section
-        frame.btnLog.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                if(frame.pass.getText().intern() == "admin"){
-                    frame.warnText.setText("");
-                    admin.cashierTab.setContent(cashier.sp);
-                    admin.recipeTab.setContent(recipeView.sp);
-                    cashier.fillTable(articles);
-                    cashier.fillTableItems(recipe);
-//                    recipeView.fillTableRecipes(db.getRecipes());
-                    primaryStage.setTitle("Admin View");
-                    primaryStage.setScene(admin.getScene());
-                    admin.fillTable(articles);
-                    System.out.println("Bello Admin !!");
+//        frame.btnCont.setOnAction(new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent event) {
+//                System.out.println("Bello Cashier!");
+//            }
+//        });
+//        // Log In button for Accesing the admin section
+//        frame.btnLog.setOnAction(new EventHandler<ActionEvent>(){
+//            @Override
+//            public void handle(ActionEvent e){
+//                if(frame.pass.getText().intern() == "admin"){
+//                    frame.warnText.setText("");
+//
+//                }
+//                else{
+//                    frame.warnText.setText("The Password is Incorrect!!!");
+//                }
+//
+//            }
+//        });
+//        primaryStage.setScene(admin.getScene());
+        admin.cashierTab.setContent(cashier.sp);
+        admin.recipeTab.setContent(recipeView.sp);
+        
+        cashier.fillTableItems(recipe);
+        recipeView.fillTableRecipes(recipesList);
+        primaryStage.setTitle("Admin View");
+//         Search bar for admin tab 
+        FilteredList<Article> filteredArticles = new FilteredList<>(this.articles,p -> true);
+        admin.searchArticles.textProperty().addListener((observable,oldValue,newValue)->{
+            filteredArticles.setPredicate(article -> {
+                if(newValue == null && oldValue == null){
+                    return true;
                 }
-                else{
-                    frame.warnText.setText("The Password is Incorrect!!!");
+                String lowerCaseArticle = newValue.toLowerCase();
+                Article ar = (Article) article;
+                if(ar.getName().toLowerCase().contains(newValue)){
+                    return true;
                 }
-            }
+                return false;
+            });
         });
+        SortedList<Article> sortedArticles = new SortedList<>(filteredArticles);
+        sortedArticles.comparatorProperty().bind(admin.table.comparatorProperty());
+        
+        
+        cashier.searchArticle.textProperty().addListener((observable,oldValue,newValue)->{
+            filteredArticles.setPredicate(article -> {
+                if(newValue == null && oldValue == null){
+                    return true;
+                }
+                String lowerCaseArticle = newValue.toLowerCase();
+                Article ar = (Article) article;
+                if(ar.getName().toLowerCase().contains(newValue)){
+                    return true;
+                }
+                return false;
+            });
+        });
+        SortedList<Article> sortedArticlesCashier = new SortedList<>(filteredArticles);
+        sortedArticlesCashier.comparatorProperty().bind(cashier.tableArticles.comparatorProperty());
+        cashier.fillTable(sortedArticlesCashier);
+
+        admin.fillTable(sortedArticles);
+        System.out.println("Bello Admin !!");
         // btn adding the element that is entered into Input Boxes
         admin.addButton.setOnAction(new EventHandler<ActionEvent>(){
             @Override 
@@ -106,7 +150,7 @@ public class StoreManager extends Application {
             admin.deleteBtn.setDisable(!(newSelection != null)); 
             if(newSelection != null){
                 Article ar = (Article) newSelection;
-                articleSwitch = new Article(ar.getName(),ar.getPrice());
+                articleSwitch = new Article(ar.getName(),ar.getPrice(),ar.getQuantity());
             }
         });
         // Commiting the edited Name Column in Article Table in Admin Tab
@@ -128,7 +172,7 @@ public class StoreManager extends Application {
                         ((Article) t.getTableView().getItems().get(
                                 t.getTablePosition().getRow())
                                 ).setName(t.getOldValue());
-                        articles.set(articles.indexOf(ar), new Article(t.getOldValue(),ar.getPrice()));
+                        articles.set(articles.indexOf(ar), new Article(t.getOldValue(),ar.getPrice(),ar.getQuantity()));
                         System.out.println("String is empty");
                     }
                     
@@ -153,36 +197,52 @@ public class StoreManager extends Application {
                         ((Article) t.getTableView().getItems().get(
                                 t.getTablePosition().getRow())
                                 ).setPrice(t.getOldValue());
-                        articles.set(articles.indexOf(ar), new Article(ar.getName(),t.getOldValue()));
+                        articles.set(articles.indexOf(ar), new Article(ar.getName(),t.getOldValue(),ar.getQuantity()));
                         System.out.println("String is empty");
                     }
                 }
             });
-        // Search bar for admin tab 
-        admin.searchArticles.textProperty().addListener(new ChangeListener<String>(){
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue){
-                if(newValue.toCharArray().length > 0){
-                    articles.clear();
-                    for(Article a : dataContainer){
-                        if(a.getName().toLowerCase().contains(newValue.toLowerCase())){
-                            articles.add(a);
-                        }   
+        admin.quantityClmn.setOnEditCommit(
+            new EventHandler<TableColumn.CellEditEvent<Article, Integer>>() {
+                @Override
+                public void handle(TableColumn.CellEditEvent<Article, Integer> t) {
+                    System.out.println(t.getNewValue());
+                    if(t.getNewValue() != null){
+                        Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
+                        ((Article) t.getTableView().getItems().get(
+                                t.getTablePosition().getRow())
+                                ).setQuantity(t.getNewValue());
+                        db.updateArticle(articleSwitch,ar);
+                    }
+                    else{
+                        Article ar = (Article) t.getTableView().getItems().get(t.getTablePosition().getRow());
+                        ((Article) t.getTableView().getItems().get(
+                                t.getTablePosition().getRow())
+                                ).setQuantity(t.getOldValue());
+                        articles.set(articles.indexOf(ar), new Article(ar.getName(),ar.getPrice(),t.getOldValue()));
+                        System.out.println("String is empty");
                     }
                 }
-                else{
-                    articles.addAll(dataContainer);
-                }
-            }
-        });
+            });
+
+
         //When tabs are changed to re set the value of the Article Table because it is used in both Tabs
         admin.tabPane.getSelectionModel().selectedItemProperty().addListener(
             new ChangeListener<Tab>() {
                 @Override
                 public void changed(ObservableValue<? extends Tab> ov, Tab t, Tab t1) {
-                    if(t1.getText().equalsIgnoreCase("Lager")){
-                        articles.addAll(dataContainer);
+                    if(t.getText().equalsIgnoreCase("Cashier")){
+                        clearItemTable();
+                        cashier.searchArticle.textProperty().set("");
                     }
+                    else if(t.getText().equalsIgnoreCase("Lager")){
+                        clearItemTable();
+                        admin.searchArticles.textProperty().set("");
+                    }
+//                    if(t1.getText().equalsIgnoreCase("Lager")){
+//                        
+//                        articles.addAll(dataContainer);
+//                    }
                     
                 }
             }
@@ -192,7 +252,7 @@ public class StoreManager extends Application {
             admin.deleteBtn.setDisable(!(newSelection != null)); 
             if(newSelection != null){
                 Article ar = (Article) newSelection;
-                toRecipe = new Item(ar.getName(),ar.getPrice(),itemID + 1);
+                toRecipe = new Item(ar.getName(),ar.getPrice());
             }
         });
         // adding article into Item Table with double click
@@ -200,37 +260,32 @@ public class StoreManager extends Application {
             TableRow<Article> row = new TableRow();
                 row.setOnMouseClicked(event ->{
                     if(event.getClickCount() == 2 &&(!row.isEmpty())){
-                        recipe.add(toRecipe);
+                        boolean contains = true;
+                        for(int i =0; i < recipe.size(); i++){
+                            if(recipe.get(i).getArticle().equals(toRecipe.getArticle())){
+                                recipe.get(i).setQuantity(recipe.get(i).getQuantity()+1);
+                                ObservableList<Item> recipeData = FXCollections.observableArrayList(recipe);
+                                recipe.clear();
+                                recipe.addAll(recipeData);
+                                contains = false;
+                            }
+                        }
+                        for(int i = 0; i < articles.size(); i++){
+                            if(articles.get(i).getName().equals(toRecipe.getArticle())){
+                                articles.get(i).setQuantity(articles.get(i).getQuantity() - 1);
+                                ObservableList<Article> arts =  FXCollections.observableArrayList(articles);
+                                articles.clear();
+                                articles.addAll(arts);
+                            }
+                        }
+                        if(contains){
+                            recipe.add(toRecipe);
+                        }
                     }
                 });
             return row;
         });
         // search in cashier table of articles and passing it into recipe table with ENTER button
-        cashier.searchArticle.addEventFilter(KeyEvent.KEY_PRESSED,e ->{
-            System.out.println(e.getText());
-            if(e.getText().matches("[a-zA-Z0-9]") || e.getCode() == KeyCode.BACK_SPACE){
-                if(cashier.searchArticle.getText().toCharArray().length > 0){
-                    articles.clear();
-                    dataContainer.stream().filter((a) -> (a.getName().toLowerCase().contains(cashier.searchArticle.getText().toLowerCase()))).forEachOrdered((a) -> {
-                        articles.add(a);
-                    });
-                    if(!articles.isEmpty()){
-                        cashier.tableArticles.getSelectionModel().selectFirst();
-                        Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-                        toRecipe = new Item(ar.getName(),ar.getPrice(),itemID + 1);
-                    }
-                }
-                else{
-                    articles.addAll(dataContainer);
-                }
-            }
-            else if(e.getCode() == KeyCode.ENTER){
-                if(!cashier.tableArticles.getSelectionModel().isEmpty()){
-                    Article ar = (Article) cashier.tableArticles.getSelectionModel().getSelectedItem();
-                    recipe.add(new Item(ar.getName(),ar.getPrice(),itemID + 1));
-                }
-            }
-        });
         cashier.tableItems.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
             cashier.deleteItem.setDisable(!(newSelection != null));
         });
@@ -238,27 +293,167 @@ public class StoreManager extends Application {
             @Override
             public void handle(ActionEvent e){
                 Item it = (Item) cashier.tableItems.getSelectionModel().getSelectedItem();
+                for(int i =0; i < articles.size(); i++){
+                    if(articles.get(i).getName().contains(it.getArticle())){
+                        articles.get(i).setQuantity(articles.get(i).getQuantity() + it.getQuantity());
+                        dataContainer = FXCollections.observableArrayList(articles);
+                        articles.clear();
+                        articles.addAll(dataContainer);
+                    }
+                }
                 recipe.remove(it);
             }
         });
         cashier.restartRecipe.setOnAction(new EventHandler<ActionEvent>(){
            @Override
            public void handle(ActionEvent e){
-               recipe.clear();
+               clearItemTable();
            }
         });
         cashier.newRecipe.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent e){
-                db.setRecipeToDb(new Recipe(itemID + 1,recipe));
-                itemID++;
+                Recipe newRecipe = new Recipe(recipe);
+                db.setRecipeToDb(newRecipe);
+                db.updateArticlesQuantity(articles);
+                recipesList.add(newRecipe);
                 recipe.clear();
             }
         });
+        recipeView.tableRecipes.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
+            Recipe r = (Recipe) newSelection;
+            recipeView.total.setText("Total: "+r.getTotallPrice());
+            recipeView.fillTableItems(r.items);
+            
+        });
+        recipeView.monthReport.setOnAction(new EventHandler<ActionEvent>(){
+        @Override
+            public void handle(ActionEvent e){
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(new Date());
+                    int yearNum = cal.get(Calendar.YEAR);
+                    String monthSelected = getNumberOfMonth(recipeView.monthsPick.getSelectionModel().getSelectedItem().toString());
+                    String monthPicked = String.valueOf(yearNum)+"-"+monthSelected;
+                    System.out.println(date+" "+monthPicked);
+                    if (date.indexOf(monthPicked) != -1) {
+                        printingList.add(r);
+                    }
+                });
+                printReport(printingList);
+                printingList.clear();
+            }           
+        });
+        recipeView.dayReport.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent e){
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    if (recipeView.dayReportDatePicker.getValue().toString().equals(date)) {
+                        printingList.add(r);
+                    }
+                });
+                printReport(printingList);
+                printingList.clear();
+            }
+        });
+        recipeView.yearReport.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent e){
+                recipesList.forEach((r) -> {
+                    String date = db.dateFormater(r.getDateOfCreating()).substring(0,10);
+                    String year = recipeView.yearPick.getSelectionModel().getSelectedItem().toString();
+                    if (date.contains(year)) {
+                        printingList.add(r);
+                    }
+                });
+                printReport(printingList);
+                printingList.clear();
+            }
+        });
+        
         primaryStage.setTitle("Store Manager");
-        primaryStage.setScene(frame.CreateScene());
+        primaryStage.setScene(admin.getScene());
         primaryStage.show();
     }
+    public void clearItemTable(){
+        for(int i =0; i < articles.size(); i++){
+            for(Item it : recipe){
+                if(articles.get(i).getName().equals(it.getArticle())){
+                 articles.get(i).setQuantity(articles.get(i).getQuantity() + it.getQuantity());
+                 dataContainer = FXCollections.observableArrayList(articles);
+                 articles.clear();
+                 articles.addAll(dataContainer);
+             }
+            }  
+         }
+        recipe.clear();
+    }
+    public void printReport(ObservableList<Recipe> printingList){
+        Output out = new Output();
+        ArrayList<OutputStringLine> mylist = new ArrayList<OutputStringLine>();
+        if(!printingList.isEmpty()){
+            printingList.forEach((r) -> {
+            mylist.add(new OutputStringLine("This is Recipe with ID " + r.getID(),ParagraphType.Title));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Created on " + r.getDateOfCreating(),ParagraphType.ItalicHeading));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("With " + r.getNumberOfItems() +" items bought",ParagraphType.Normal));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Items are",ParagraphType.Normal));
+
+            for(Item it: r.getItems()){
+                String articleName = it.getArticle()+" "+it.getQuantity()+"x ";
+                mylist.add(new OutputStringLine(articleName,ParagraphType.Normal,it.getPrice()));
+
+            }
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("Total: "+r.getTotallPrice(),ParagraphType.Normal));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+            mylist.add(new OutputStringLine("",ParagraphType.Normal,0));
+
+
+            });
+        out.printRecipes(mylist);
+        }
+        else{
+            System.out.println("Nothing to PRINT");
+        }
+    }
+    public String getNumberOfMonth(String month){
+        switch(month){
+            case "January":
+                return "01";
+             case "February":
+                return "02"; 
+            case "March":
+                return "03";
+            case "April":
+                return "04";
+            case "May":
+                return "05";
+            case "June":
+                return "06";
+            case "July":
+                return "07";
+            case "Avgust":
+                return "08";
+            case "September":
+                return "09";
+            case "Octomber":
+                return "10";
+            case "November":
+                return "11";
+            case "December":
+                return "12";
+            default:
+                break;
+        }
+        return "";
+    }
+
 
     /**
      * @param args the command line arguments

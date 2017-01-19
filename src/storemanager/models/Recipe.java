@@ -8,13 +8,16 @@ package storemanager.models;
 import java.util.Date;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import storemanager.models.DataBase;
 
 /**
  *
  * @author Haris
  */
 public class Recipe {
+    public DataBase db = new DataBase();
     public SimpleIntegerProperty ID;
     public SimpleIntegerProperty numberOfItems;
     public float totallPrice;
@@ -22,23 +25,38 @@ public class Recipe {
     public SimpleStringProperty date;
     public ObservableList<Item> items;
     
-    public Recipe(int id,ObservableList<Item> articles){
-        this.ID = new SimpleIntegerProperty(id);
-        this.items = articles;
+    public Recipe(ObservableList<Item> articles){
+        this.ID = new SimpleIntegerProperty(db.getLastRecipeId() + 1);
+        this.items = FXCollections.observableArrayList(articles);
         this.numberOfItems = new SimpleIntegerProperty(articles.size());
         this.totallPrice = getTotal(articles);
         this.dateOfCreating = new Date();
-        this.date = new SimpleStringProperty(dateOfCreating.toString());
+        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
     }
     public Recipe(int id,Date dt){
         this.ID = new SimpleIntegerProperty(id);
         this.dateOfCreating = dt;
-        this.date = new SimpleStringProperty(dateOfCreating.toString());
+        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
+        this.items = FXCollections.observableArrayList();
+        this.numberOfItems = new SimpleIntegerProperty();
     }
     
     public float getTotal(ObservableList<Item> items){
         float totall = 0;
-        return totall = items.stream().map((i) -> i.getPrice()).reduce(totall, (accumulator, _item) -> accumulator + _item);
+        for(Item it:items){
+            totall += (it.getPrice() * it.getQuantity());
+        }
+        return totall;
+    }
+    public void setTotal(){
+        float totall = 0;
+        for(Item it:items){
+            totall += (it.getPrice() * it.getQuantity());
+        }
+        this.totallPrice = totall;
+    }
+    public void setTotallPrice(){
+        
     }
     
     public void setPropertiesFromDb(ObservableList<Item> items){
@@ -46,7 +64,6 @@ public class Recipe {
         this.numberOfItems = new SimpleIntegerProperty(items.size());
         this.items = items;
     }
-    
     public ObservableList<Item> getItems(){
         return this.items;
     }

@@ -16,16 +16,17 @@ import javafx.beans.property.SimpleStringProperty;
  */
 public class Item {
     private int ID;
+    public DataBase db = new DataBase();
     public SimpleStringProperty article;
     public SimpleFloatProperty price;
     public SimpleIntegerProperty quantity;
     public int RecipeID;
 
-    public Item(String article,float price,int recipeID){
+    public Item(String article,float price){
         this.article = new SimpleStringProperty(article);
         this.price = new SimpleFloatProperty(price);
         this.quantity = new SimpleIntegerProperty(1);
-        this.RecipeID = recipeID;   
+        this.RecipeID = db.getLastRecipeId() + 1;   
     }
     public Item(int id,String article,float price,int quantity,int recipeID){
         this.ID = id;

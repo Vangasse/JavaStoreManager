@@ -5,6 +5,8 @@
  */
 package storemanager.views;
 
+
+import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,8 +15,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -53,12 +59,12 @@ public class RecipeView {
     public SplitPane sp;
     public StackPane stackP1,stackP2;
     public VBox vbRecipes,vbItems;
-    public HBox hb1,hb2,hb3,hb4;
+    public HBox hb,hb1,hb2,hb3,hb4,hb5;
     public TextField searchArticle;
     public Label total;
-    public Button dayReport,monthReport,yearReport;
-    public DatePicker recipeSearchDate,dayReportDatePicker;
-    public ChoiceBox monthsPick,yearPick;
+    public Button dayReport,monthReport,yearReport,filter,deleteRecipe;
+    public DatePicker dayReportDatePicker;
+    public ChoiceBox monthsPick,yearPick,comboYear,comboMonth,dayPick;
     public List<String> months = new ArrayList<String>();
     
     public RecipeView(){
@@ -107,11 +113,76 @@ public class RecipeView {
                     new PropertyValueFactory<Item, Integer>("Quantity"));
         itemsQuantity.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         
-        recipeSearchDate = new DatePicker();
-        recipeSearchDate.setMinWidth(290);
+
+ 
+
+
+        comboYear = new ChoiceBox<String>();
+        comboYear.getItems().add("2017");
+        comboYear.getItems().add("2018");
+        comboYear.getItems().add("2019");
+        comboYear.getSelectionModel().selectFirst();
+        comboMonth = new ChoiceBox(FXCollections.observableArrayList(months));
+        comboMonth.getSelectionModel().selectFirst();
+        
+        comboMonth.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                dayPick.getItems().clear();
+                int numOfMonth = comboMonth.getSelectionModel().getSelectedIndex();
+                int yearSelected = Integer.parseInt(comboYear.getSelectionModel().getSelectedItem().toString());
+              
+                System.out.println(numOfMonth +" "+yearSelected);
+                Calendar mycal = new GregorianCalendar(yearSelected, numOfMonth, 1);
+                int daysInMonth = mycal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                for(int i = 1; i < daysInMonth + 1 ; i++){
+                    dayPick.getItems().add(String.valueOf(i));
+                    dayPick.getSelectionModel().selectFirst();
+                }
+            }
+        });
+        comboYear.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                dayPick.getItems().clear();
+                int numOfMonth = comboMonth.getSelectionModel().getSelectedIndex();
+                int yearSelected = Integer.parseInt(comboYear.getSelectionModel().getSelectedItem().toString());
+              
+                System.out.println(numOfMonth +" "+yearSelected);
+                Calendar mycal = new GregorianCalendar(yearSelected, numOfMonth, 1);
+                int daysInMonth = mycal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                for(int i = 1; i < daysInMonth + 1 ; i++){
+                    dayPick.getItems().add(String.valueOf(i));
+                    dayPick.getSelectionModel().selectFirst();
+                }
+            }
+        });
+        dayPick = new ChoiceBox<String>(); 
+        dayPick.getItems().add("1");
+        dayPick.getSelectionModel().selectFirst();
+        filter = new Button("Filter");
+        
+        
+
         //storing columns into Table
         tableRecipes.getColumns().addAll(dateRecipe,RecipeID,numOfItems);
         tableRecipeItems.getColumns().addAll(nameItems,itemsQuantity,priceItems);
+        hb = new HBox();
+        hb.setSpacing(10);
+        hb.setAlignment(Pos.BOTTOM_CENTER);
+        hb.getChildren().addAll(comboYear,comboMonth,dayPick,filter);
+        
+        
+        deleteRecipe = new Button("Delete");
+        deleteRecipe.setDisable(true);
+        deleteRecipe.setMinWidth(290);
+        tableRecipes.getSelectionModel().selectedItemProperty().addListener((obs,oldSelection,newSelection)->{
+            deleteRecipe.setDisable(!(newSelection != null));
+        });
+        hb5 = new HBox();
+        hb5.setSpacing(10);
+        hb5.setAlignment(Pos.BOTTOM_CENTER);
+        hb5.getChildren().add(deleteRecipe);
         
         vbRecipes = new VBox();
         vbRecipes.setAlignment(Pos.TOP_LEFT);
@@ -119,7 +190,7 @@ public class RecipeView {
         vbRecipes.setMinSize(300, 100);
         vbRecipes.setMaxWidth(300);
         vbRecipes.setSpacing(10);
-        vbRecipes.getChildren().addAll(tableRecipes,recipeSearchDate);
+        vbRecipes.getChildren().addAll(tableRecipes,hb,hb5);
         
         stackP1 = new StackPane();
         stackP1.setAlignment(Pos.TOP_LEFT);
@@ -211,5 +282,36 @@ public class RecipeView {
         months.add("Octomber");
         months.add("November");
         months.add("December");
+    }
+        public int getNumberOfMonth(String month){
+        switch(month){
+            case "January":
+                return 0;
+             case "February":
+                return 1; 
+            case "March":
+                return 2;
+            case "April":
+                return 3;
+            case "May":
+                return 4;
+            case "June":
+                return 5;
+            case "July":
+                return 6;
+            case "Avgust":
+                return 7;
+            case "September":
+                return 8;
+            case "Octomber":
+                return 9;
+            case "November":
+                return 10;
+            case "December":
+                return 11;
+            default:
+                break;
+        }
+        return 0;
     }
 }

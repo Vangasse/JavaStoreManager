@@ -64,9 +64,9 @@ public class DataBase {
         String query = "INSERT INTO articles ( ArticleName, Price,Quantity) VALUES ('"+article.getName()+"','"+article.getPrice()+"','"+article.getQuantity()+"')";
         try{
             stmt.executeUpdate(query);
-            System.out.println("Querry succesfully fullfiled");
+            System.out.println("Querry succesfully fullfiled no 3");
         }catch(Exception e){
-            System.out.println("Failed to update database"+ e);
+            System.out.println("Failed to update database no 3 "+ e);
         }
         //INSERT INTO `articles` (`ID`, `ArticleName`, `Price`) VALUES (NULL, 'Nutrideal Govedje Povrce', '180');
     }
@@ -74,9 +74,9 @@ public class DataBase {
         String query = "DELETE FROM articles WHERE articles.ArticleName ='"+ article.getName()+"'";
         try{
             stmt.executeUpdate(query);
-            System.out.println("Querry succesfully fullfiled");
+            System.out.println("Querry succesfully fullfiled no 4");
         }catch(Exception e){
-            System.out.println("Failed to update database"+ e);
+            System.out.println("Failed to update database no 4 "+ e);
         }
     }
     public void updateArticle(Article oldArticle,Article newArticle){
@@ -89,8 +89,9 @@ public class DataBase {
             stmt.executeUpdate(queryTwo);
             stmt.executeUpdate(queryThree);
             System.out.println("Querry succesfully fullfiled");
+
         }catch(Exception e){
-            System.out.println("Failed to update database"+ e);
+            System.out.println("Failed to update database no 5 "+ e);
         }
     }
     public void setRecipeToDb(Recipe recipe){
@@ -107,10 +108,11 @@ public class DataBase {
             for(Item it: listOfItems){
                 String queryItem = "INSERT INTO items (ArticleName, ArticlePrice,Quantity,RecipeID) VALUES ('"+it.getArticle()+"', '"+it.getPrice()+"', '"+it.getQuantity()+"', '"+it.getRecipeID()+"');";
                 stmt.executeUpdate(queryItem);
-                System.out.println("Query succesfully executed");
+                System.out.println("Query succesfully executed no 6 ");
             }
         }catch(Exception ex){
             System.out.println("Failed to execute query");
+
         }
     }
     public int getLastRecipeId(){
@@ -123,9 +125,9 @@ public class DataBase {
                 lastID = Integer.parseInt(result.getString("ID"));
             }
             System.out.println(lastID);
-            System.out.println("Querry succesfully fullfiled");
+            System.out.println("Querry succesfully fullfiled no 7");
         }catch(Exception e){
-            System.out.println("Failed to update database"+ e);
+            System.out.println("Failed to update database no 7 "+ e);
         }
         return (lastID != 0)? lastID : 0;
     }
@@ -166,7 +168,7 @@ public class DataBase {
             
             return recipes;
         }catch(Exception e){
-            System.out.println("Query failed to executed ");
+            System.out.println("Query failed to executed no 8");
             return recipes;
         }
     }
@@ -177,7 +179,7 @@ public class DataBase {
                 stmt.executeUpdate(query);
             }
         }catch(Exception e){
-            System.out.println("Query Update not executed");
+            System.out.println("Query Update not executed no 9 ");
         }
         
     }
@@ -188,6 +190,7 @@ public class DataBase {
         int year = cal.get(Calendar.YEAR);
         String month = (cal.get(Calendar.MONTH) > 8) ?  Integer.toString(cal.get(Calendar.MONTH)+1): "0"+Integer.toString(cal.get(Calendar.MONTH)+1);
         String day = (cal.get(Calendar.DATE) > 10 ) ? Integer.toString(cal.get(Calendar.DATE)) : "0" + Integer.toString(cal.get(Calendar.DATE)) ;
+
         String hour = Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
         String minutes = Integer.toString(cal.get(Calendar.MINUTE));
 
@@ -195,5 +198,16 @@ public class DataBase {
         
         return formatedDate;
     }
+
+    public void removeRecipeFromDb(Recipe rec){
+        String query = "DELETE FROM recipe WHERE recipe.ID="+rec.getID()+"";
+        try{
+            stmt.executeUpdate(query);
+            System.out.println("Querry succesfully fullfiled no 4");
+        }catch(Exception e){
+            System.out.println("Failed to update database no 4 "+ e);
+        }
+    }
+
     
 }

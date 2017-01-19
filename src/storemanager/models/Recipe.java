@@ -31,12 +31,13 @@ public class Recipe {
         this.numberOfItems = new SimpleIntegerProperty(articles.size());
         this.totallPrice = getTotal(articles);
         this.dateOfCreating = new Date();
-        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
+        this.date = new SimpleStringProperty(db.dateFormater(this.dateOfCreating));
+
     }
     public Recipe(int id,Date dt){
         this.ID = new SimpleIntegerProperty(id);
         this.dateOfCreating = dt;
-        this.date = new SimpleStringProperty(this.dateOfCreating.toString());
+        this.date = new SimpleStringProperty(db.dateFormater(this.dateOfCreating));
         this.items = FXCollections.observableArrayList();
         this.numberOfItems = new SimpleIntegerProperty();
     }
